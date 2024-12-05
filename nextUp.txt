@@ -1,0 +1,14 @@
+Servers:
+    - use a child process to do encryption and decryption
+    - up to 5 at a time
+    - proper error messages and exiting
+    - Check that key is at least as long as plaintext/ciphertext
+    - check arguments passed by send (?? not really needed)
+    - in index helper function, return an error instead of -1
+    - survive but send a message to client if the wrong one connects
+
+Clients:
+    - Check that key is at least as long as plaintext/ciphertext
+    - check arguments, make sure there are correct amount
+    - Check for bad characters in text
+    - client terminates if connecting to wrong server

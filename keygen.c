@@ -16,7 +16,7 @@ int main (int argc, char* argv[]){
         exit(0); 
     }
 
-    // use valid argument to create key string of appropriate length
+    // use valid argument to create key buffer of appropriate length
     int numChar = atoi(argv[1]);
     char* key = malloc(sizeof(char) * (numChar + 1));
 
