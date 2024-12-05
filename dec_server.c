@@ -18,13 +18,13 @@ int find_char_index(char target) {
 }
 
 void decipher_text(char* ciphertext, char* key){
-    // create a ciphertext buffer equal in length to the plaintext
+    // create a plaintext buffer equal in length to the ciphertext
     int text_length = strlen(ciphertext);
     char* plaintext = malloc(sizeof(char) * (text_length + 1));
 
     /*
-    for each character in plaintext,
-        add the int values of the plaintext character and corresponding key character
+    for each character in ciphertext,
+        subtract the int values of the corresponding key character from the ciphertect character
         generate ciphertext using this encrypted int as the index
     */ 
     for(int i = 0; i < text_length; i++){
@@ -34,7 +34,7 @@ void decipher_text(char* ciphertext, char* key){
     }
     plaintext[text_length] = '\0';
 
-    // write ciphertext\n to stdout
+    // write plaintext\n to stdout
     printf("%s\n", plaintext);
 
     // free allocated memory
