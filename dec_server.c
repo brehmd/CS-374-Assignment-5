@@ -9,19 +9,13 @@
 
 static char cryptArray[27] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' '};
 
-// Error function used for reporting issues
-void error(const char *msg) {
-  perror(msg);
-  exit(1);
-} 
-
 int find_char_index(char target) {
     for (int i = 0; cryptArray[i] != '\0'; i++) {
         if (cryptArray[i] == target) {
             return i; // Found the character at index i
         }
     }
-    return -1; // Character not found                   // ERROR
+    return -1; // Character not found
 }
 
 char* decipher_text(char* ciphertext, char* key){
@@ -65,7 +59,7 @@ void setupAddressStruct(struct sockaddr_in* address, int portNumber){
 
 int main(int argc, char* argv[]){
     int connectionSocket, charsRead;
-    char buffer[256];
+    char buffer[1024];
     struct sockaddr_in serverAddress, clientAddress;
     socklen_t sizeOfClientInfo = sizeof(clientAddress);
 
@@ -78,7 +72,8 @@ int main(int argc, char* argv[]){
     // Create the socket that will listen for connections
     int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (listenSocket < 0) {
-        error("ERROR opening socket");
+        perror("ERROR opening socket");
+        exit(1);
     }
 
     // Set up the address struct for the server socket
@@ -88,7 +83,8 @@ int main(int argc, char* argv[]){
     if (bind(listenSocket, 
             (struct sockaddr *)&serverAddress, 
             sizeof(serverAddress)) < 0){
-        error("ERROR on binding");
+        perror("ERROR on binding");
+        exit(1);
     }
 
     // Start listening for connetions. Allow up to 5 connections to queue up
@@ -101,44 +97,113 @@ int main(int argc, char* argv[]){
                     (struct sockaddr *)&clientAddress, 
                     &sizeOfClientInfo); 
         if (connectionSocket < 0){
-            error("ERROR on accept");
+            perror("ERROR on accept");
+            exit(1);
+        }
+
+        int childStatus;
+
+        pid_t spawnPid = fork();
+
+        // manage parent and child processes 
+        switch(spawnPid){
+            case -1:
+                perror("failure to fork()\n");
+                exit(1);
+                break;
+
+            case 0:
+                // child
+                
+                // Get the message from the client and display it
+                memset(buffer, '\0', 1024);
+                // Read the client's message from the socket
+                charsRead = recv(connectionSocket, buffer, 255, 0); 
+                if (charsRead < 0){
+                    perror("ERROR reading from socket");
+                    // exit(1);
+                }
+
+                // printf("SERVER: I received this from the client: \"%s\"\n", buffer);
+
+                char* token, *client_name, *ciphertext, *key, *plaintext;
+                token = strtok(buffer, "!");
+                client_name = token;
+
+                if(strcmp(client_name, "dec_client")){
+                    charsRead = send(connectionSocket, "wrong client access", 20, 0); 
+                    if (charsRead < 0){
+                        perror("ERROR writing to socket");
+                    }
+                    close(connectionSocket);
+                    continue;
+                }
+
+                token = strtok(NULL, "!");
+                ciphertext = token;
+                token = strtok(NULL, "!");
+                key = token;
+
+                plaintext = decipher_text(ciphertext, key);
+
+                // Send a Success message back to the client
+                charsRead = send(connectionSocket, plaintext, strlen(plaintext), 0); 
+                if (charsRead < 0){
+                    perror("ERROR writing to socket");
+                }
+                // Close the connection socket for this client
+                close(connectionSocket);
+                free(plaintext);
+                exit(0);
+                break;
+
+            default:
+                // parent
+                continue;
+                break;
         }
 
         // This should be a background process....
 
-        // Get the message from the client and display it
-        memset(buffer, '\0', 256);
-        // Read the client's message from the socket
-        charsRead = recv(connectionSocket, buffer, 255, 0); 
-        if (charsRead < 0){
-            error("ERROR reading from socket");
-        }
+        // // Get the message from the client and display it
+        // memset(buffer, '\0', 1024);
+        // // Read the client's message from the socket
+        // charsRead = recv(connectionSocket, buffer, 255, 0); 
+        // if (charsRead < 0){
+        //     perror("ERROR reading from socket");
+        //     // exit(1);
+        // }
 
-        // printf("SERVER: I received this from the client: \"%s\"\n", buffer);
+        // // printf("SERVER: I received this from the client: \"%s\"\n", buffer);
 
-        char* token, *client_name, *ciphertext, *key, *plaintext;
-        token = strtok(buffer, "!");
-        client_name = token;
+        // char* token, *client_name, *ciphertext, *key, *plaintext;
+        // token = strtok(buffer, "!");
+        // client_name = token;
 
-        if(strcmp(client_name, "dec_client")){
-            error("ERROR wrong client access");
-        }
+        // if(strcmp(client_name, "dec_client")){
+        //     charsRead = send(connectionSocket, "wrong client access", 20, 0); 
+        //     if (charsRead < 0){
+        //         perror("ERROR writing to socket");
+        //     }
+        //     close(connectionSocket);
+        //     continue;
+        // }
 
-        token = strtok(NULL, "!");
-        ciphertext = token;
-        token = strtok(NULL, "!");
-        key = token;
+        // token = strtok(NULL, "!");
+        // ciphertext = token;
+        // token = strtok(NULL, "!");
+        // key = token;
 
-        plaintext = decipher_text(ciphertext, key);
+        // plaintext = decipher_text(ciphertext, key);
 
-        // Send a Success message back to the client
-        charsRead = send(connectionSocket, plaintext, strlen(plaintext), 0); 
-        if (charsRead < 0){
-            error("ERROR writing to socket");
-        }
-        // Close the connection socket for this client
-        close(connectionSocket);
-        free(plaintext);
+        // // Send a Success message back to the client
+        // charsRead = send(connectionSocket, plaintext, strlen(plaintext), 0); 
+        // if (charsRead < 0){
+        //     perror("ERROR writing to socket");
+        // }
+        // // Close the connection socket for this client
+        // close(connectionSocket);
+        // free(plaintext);
     }
 
     // // shortcut for testing purposes
