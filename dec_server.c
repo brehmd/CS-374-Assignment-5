@@ -71,7 +71,7 @@ int main(int argc, char* argv[]){
     // Create the socket that will listen for connections
     int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (listenSocket < 0) {
-        perror("ERROR opening socket");
+        fprintf(stderr,"ERROR opening socket\n");
         exit(1);
     }
 
@@ -82,7 +82,7 @@ int main(int argc, char* argv[]){
     if (bind(listenSocket, 
             (struct sockaddr *)&serverAddress, 
             sizeof(serverAddress)) < 0){
-        perror("ERROR on binding");
+        fprintf(stderr,"ERROR on binding\n");
         exit(1);
     }
 
@@ -96,7 +96,7 @@ int main(int argc, char* argv[]){
                     (struct sockaddr *)&clientAddress, 
                     &sizeOfClientInfo); 
         if (connectionSocket < 0){
-            perror("ERROR on accept");
+            fprintf(stderr,"ERROR on accept\n");
             exit(1);
         }
 
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]){
         // manage parent and child processes 
         switch(spawnPid){
             case -1:
-                perror("failure to fork()\n");
+                fprintf(stderr,"failure to fork()\n");
                 exit(1);
                 break;
 
@@ -131,7 +131,7 @@ int main(int argc, char* argv[]){
                         break;
                     }
                     if (charsRead < 0){
-                        perror("ERROR reading from socket");
+                        fprintf(stderr,"ERROR reading from socket\n");
                     }
                 }
 
@@ -144,7 +144,7 @@ int main(int argc, char* argv[]){
                 if(strcmp(client_name, "dec_client")){
                     charsRead += send(connectionSocket, "wrong client access#", 20, 0); 
                     if (charsRead < 0){
-                        perror("ERROR writing to socket");
+                        fprintf(stderr,"ERROR writing to socket\n");
                     }
                     close(connectionSocket);
                     continue;
@@ -162,7 +162,7 @@ int main(int argc, char* argv[]){
                 while(charsWritten < strlen(plaintext)){
                     charsWritten += send(connectionSocket, plaintext + charsWritten, strlen(plaintext) - charsWritten, 0);
                     if (charsWritten < 0){
-                        perror("ERROR writing to socket");
+                        fprintf(stderr,"ERROR writing to socket\n");
                     }
                 }
                 // Close the connection socket for this client

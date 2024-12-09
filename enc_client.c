@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 
     plaintext = fopen(argv[1], "r");
     if (plaintext == NULL) {
-        perror("Error opening plaintext file.");
+        fprintf(stderr, "Error opening plaintext file.\n");
         exit(1);
     }
 
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 
     key = fopen(argv[2], "r");
     if (key == NULL) {
-        perror("Error opening key file.");
+        fprintf(stderr, "Error opening key file.\n");
         exit(1);
     }
 
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
     // Create a socket
     socketFD = socket(AF_INET, SOCK_STREAM, 0); 
     if (socketFD < 0){
-        perror("CLIENT: ERROR opening socket");
+        fprintf(stderr, "CLIENT: ERROR opening socket\n");
         exit(2);
     }
 
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
 
     // Connect to server
     if (connect(socketFD, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0){
-        perror("CLIENT: ERROR connecting");
+        fprintf(stderr, "CLIENT: ERROR connecting\n");
         exit(0);
     }
 
@@ -101,17 +101,17 @@ int main(int argc, char *argv[]) {
     int keylen = strlen(key_buffer);
     
     if (textlen > keylen){
-        perror("ERROR: key is too short");
+        fprintf(stderr, "ERROR: key is too short\n");
         exit(1);
     }
 
     for(int i = 0; i < textlen; i++){
         if (find_char_index(text_buffer[i]) == -1){
-            perror("ERROR: plaintext contains invalid characters");
+            fprintf(stderr, "ERROR: plaintext contains invalid characters\n");
             exit(1);
         }
         if (find_char_index(key_buffer[i]) == -1){
-            perror("ERROR: key contains invalid characters");
+            fprintf(stderr, "ERROR: key contains invalid characters\n");
             exit(1);
         }
     }
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
     while(charsWritten < strlen(buffer)){
         charsWritten += send(socketFD, buffer + charsWritten, strlen(buffer) - charsWritten, 0);
         if (charsWritten < 0){
-            perror("CLIENT: ERROR writing to socket");
+            fprintf(stderr, "CLIENT: ERROR writing to socket\n");
             exit(2);
         }
     }
@@ -143,7 +143,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (charsRead < 0){
-            perror("CLIENT: ERROR reading from socket");
+            fprintf(stderr, "CLIENT: ERROR reading from socket\n");
             exit(2);
         }
     }
