@@ -9,12 +9,6 @@
 
 static char cryptArray[27] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' '};
 
-// Error function used for reporting issues
-// void error(const char *msg) {
-//   perror(msg);
-//   exit(1);
-// } 
-
 int find_char_index(char target) {
     for (int i = 0; cryptArray[i] != '\0'; i++) {
         if (cryptArray[i] == target) {
@@ -143,8 +137,9 @@ int main(int argc, char* argv[]){
                 client_name = token;
                 
                 if(strcmp(client_name, "enc_client")){
-                    charsRead += send(connectionSocket, "wrong client access", 20, 0); 
-                    if (charsRead < 0){
+
+                    charsWritten += send(connectionSocket, "wrong client access#", 20, 0);
+                    if (charsWritten < 0){
                         perror("ERROR writing to socket");
                     }
                     close(connectionSocket);
@@ -178,48 +173,7 @@ int main(int argc, char* argv[]){
                 break;
         }
 
-
-        // // Get the message from the client and display it
-        // memset(buffer, '\0', 1024);
-        // // Read the client's message from the socket
-        // charsRead = recv(connectionSocket, buffer, 255, 0); 
-        // if (charsRead < 0){
-        //     perror("ERROR reading from socket");
-        // }
-
-
-        // char* token, *client_name, *plaintext, *key, *ciphertext;
-        // token = strtok(buffer, "!");
-        // client_name = token;
-        
-        // if(strcmp(client_name, "enc_client")){
-        //     charsRead = send(connectionSocket, "wrong client access", 20, 0); 
-        //     if (charsRead < 0){
-        //         perror("ERROR writing to socket");
-        //     }
-        //     close(connectionSocket);
-        //     continue;
-        // }
-
-        // token = strtok(NULL, "!");
-        // plaintext = token;
-        // token = strtok(NULL, "!");
-        // key = token;
-
-        // ciphertext = cipher_text(plaintext, key);
-
-        // // Send a Success message back to the client
-        // charsRead = send(connectionSocket, ciphertext, strlen(ciphertext), 0); 
-        // if (charsRead < 0){
-        //     perror("ERROR writing to socket");
-        // }
-        // // Close the connection socket for this client
-        // close(connectionSocket);
-        // free(ciphertext);
     }
-
-    // // shortcut for testing purposes
-    // cipher_text(argv[1], argv[2]);
 
     return 0;
 }

@@ -41,19 +41,22 @@ void setupAddressStruct(struct sockaddr_in* address, int portNumber, char* hostn
 }
 
 int main(int argc, char *argv[]) {
+
     int socketFD, portNumber, charsWritten, charsRead;
+    charsWritten = 0;
+    charsRead = 0;
     struct sockaddr_in serverAddress;
-    char buffer[1024];
+    char buffer[4096];
     // Check usage & args
     if (argc != 4) { 
         fprintf(stderr,"USAGE: %s hostname port\n", argv[0]); 
-        exit(0); 
+        exit(0);
     }
 
 
     // get text from file
     FILE *ciphertext, *key;
-    char text_buffer[1024], key_buffer[1024];
+    char text_buffer[2048], key_buffer[2048];
 
     ciphertext = fopen(argv[1], "r");
     if (ciphertext == NULL) {
@@ -75,7 +78,6 @@ int main(int argc, char *argv[]) {
     key_buffer[strcspn(key_buffer, "\n")] = 0;
     fclose(key);
 
-
     // Create a socket
     socketFD = socket(AF_INET, SOCK_STREAM, 0); 
     if (socketFD < 0){
@@ -89,7 +91,7 @@ int main(int argc, char *argv[]) {
     // Connect to server
     if (connect(socketFD, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0){
         perror("CLIENT: ERROR connecting");
-        exit(2);
+        exit(0);
     }
 
     // Check that key is at least as long as plaintext/ciphertext
@@ -114,30 +116,39 @@ int main(int argc, char *argv[]) {
         }
     }
 
-
-    sprintf(buffer, "dec_client!%s!%s", text_buffer, key_buffer);
+    sprintf(buffer, "dec_client!%s!%s#", text_buffer, key_buffer);
 
     // Send message to server
     // Write to the server
-    charsWritten = send(socketFD, buffer, strlen(buffer), 0); 
-    if (charsWritten < 0){
-        perror("CLIENT: ERROR writing to socket");
-        exit(2);
+    while(charsWritten < strlen(buffer)){
+        charsWritten += send(socketFD, buffer + charsWritten, strlen(buffer) - charsWritten, 0);
+        if (charsWritten < 0){
+            perror("CLIENT: ERROR writing to socket");
+            exit(2);
+        }
     }
-    if (charsWritten < strlen(buffer)){
-        perror("CLIENT: WARNING: Not all data written to socket!\n");
-    }
+
 
     // Get return message from server
     // Clear out the buffer again for reuse
-    memset(buffer, '\0', sizeof(buffer));
+    memset(buffer, '\0', 4096);
     // Read data from the socket, leaving \0 at end
-    charsRead = recv(socketFD, buffer, sizeof(buffer) - 1, 0); 
 
-    if (charsRead < 0){
-        perror("CLIENT: ERROR reading from socket");
-        exit(2);
+
+    while (strstr(buffer, "#") == NULL){
+        charsRead += recv(socketFD, buffer+charsRead, 1000, 0);
+
+        if (charsRead == 0){
+            break;
+        }
+
+        if (charsRead < 0){
+            perror("CLIENT: ERROR reading from socket");
+            exit(2);
+        }
     }
+
+    buffer[strcspn(buffer, "#")] = 0;
 
     // client terminates if connecting to wrong server (if message gives error)
     if (strcmp(buffer, "wrong client access") == 0){

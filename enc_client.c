@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     charsWritten = 0;
     charsRead = 0;
     struct sockaddr_in serverAddress;
-    char buffer[2048];
+    char buffer[4096];
     // Check usage & args
     if (argc != 4) { 
         fprintf(stderr,"USAGE: %s hostname port\n", argv[0]); 
@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
 
     // Get return message from server
     // Clear out the buffer again for reuse
-    memset(buffer, '\0', 2048);
+    memset(buffer, '\0', 4096);
     // Read data from the socket, leaving \0 at end
 
 
@@ -148,14 +148,14 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    buffer[strcspn(buffer, "#")] = 0;
+
     // client terminates if connecting to wrong server (if message gives error)
     if (strcmp(buffer, "wrong client access") == 0){
         fprintf(stderr, "ERROR: could not contact enc_server on port %s\n", argv[3]);
         close(socketFD);
         exit(2);
     }
-
-    buffer[strcspn(buffer, "#")] = 0;
 
     printf("%s\n", buffer);
 
